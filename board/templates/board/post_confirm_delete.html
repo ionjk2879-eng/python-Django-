@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}게시글 삭제{% endblock %}
+{% block content %}
+    <h1 class="h4 page-title mb-3">게시글 삭제</h1>
+    <div class="card-box">
+        <p>정말 "{{ post.title }}" 게시글을 삭제하시겠습니까?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">삭제</button>
+            <a class="btn btn-secondary" href="{% url 'board:post_detail' post.pk %}">취소</a>
+        </form>
+    </div>
+{% endblock %}

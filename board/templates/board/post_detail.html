@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block content %}
+    <div class="card-box mb-4">
+        <h1 class="h4 page-title mb-2">{{ post.title }}</h1>
+        <div class="text-muted small mb-3">
+            {{ post.author.username }} · {{ post.created_at|date:'Y-m-d H:i' }} · 조회 {{ post.view_count }}
+        </div>
+        <hr>
+        <div class="py-2" style="white-space: pre-line; line-height: 1.7;">{{ post.content }}</div>
+    </div>
+
+    <div class="d-flex justify-content-between mb-4">
+        <a class="btn btn-secondary" href="{% url 'board:post_list' %}">목록</a>
+        {% if user == post.author %}
+            <div>
+                <a class="btn btn-outline-primary" href="{% url 'board:post_update' post.pk %}">수정</a>
+                <a class="btn btn-outline-danger" href="{% url 'board:post_delete' post.pk %}">삭제</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card-box">
+        <h2 class="h6 page-title mb-3">댓글 {{ comments|length }}</h2>
+        <ul class="list-group mb-3">
+            {% for comment in comments %}
+                <li class="list-group-item px-0 border-start-0 border-end-0">
+                    <div id="comment-view-{{ comment.pk }}" class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-bold small">{{ comment.author.username }}</div>
+                            <div id="comment-content-{{ comment.pk }}" style="white-space: pre-line;">{{ comment.content }}</div>
+                            <div class="text-muted small">{{ comment.created_at|date:'Y-m-d H:i' }}</div>
+                        </div>
+                        {% if user == comment.author %}
+                            <div class="text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleCommentEdit({{ comment.pk }})">수정</button>
+                                <a class="btn btn-sm btn-outline-danger" href="{% url 'board:comment_delete' comment.pk %}">삭제</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if user == comment.author %}
+                        <form id="comment-edit-{{ comment.pk }}" class="d-none mt-2"
+                              method="post" action="{% url 'board:comment_update' comment.pk %}"
+                              onsubmit="return submitCommentEdit(event, {{ comment.pk }})">
+                            {% csrf_token %}
+                            <textarea name="content" class="form-control mb-2" rows="2">{{ comment.content }}</textarea>
+                            <div id="comment-edit-error-{{ comment.pk }}" class="text-danger small mb-2 d-none"></div>
+                            <button type="submit" class="btn btn-sm btn-primary">저장</button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="toggleCommentEdit({{ comment.pk }})">취소</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li class="list-group-item text-muted px-0 border-start-0 border-end-0">댓글이 없습니다.</li>
+            {% endfor %}
+        </ul>
+
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'board:comment_create' post.pk %}">
+                {% csrf_token %}
+                {{ comment_form.content|add_class:'form-control mb-2' }}
+                <button type="submit" class="btn btn-primary">댓글 등록</button>
+            </form>
+        {% else %}
+            <p class="text-muted mb-0">댓글을 작성하려면 <a href="{% url 'accounts:login' %}">로그인</a>이 필요합니다.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleCommentEdit(pk) {
+            document.getElementById('comment-view-' + pk).classList.toggle('d-none');
+            document.getElementById('comment-edit-' + pk).classList.toggle('d-none');
+        }
+
+        function submitCommentEdit(event, pk) {
+            event.preventDefault();
+            const form = event.target;
+            const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+            const content = form.querySelector('textarea[name=content]').value;
+            const errorBox = document.getElementById('comment-edit-error-' + pk);
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new URLSearchParams({content: content}),
+            })
+                .then(async (res) => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                        const message = data.errors && data.errors.content
+                            ? data.errors.content[0].message
+                            : '저장에 실패했습니다.';
+                        errorBox.textContent = message;
+                        errorBox.classList.remove('d-none');
+                        return;
+                    }
+                    errorBox.classList.add('d-none');
+                    document.getElementById('comment-content-' + pk).textContent = data.content;
+                    toggleCommentEdit(pk);
+                })
+                .catch(() => {
+                    errorBox.textContent = '네트워크 오류가 발생했습니다.';
+                    errorBox.classList.remove('d-none');
+                });
+
+            return false;
+        }
+    </script>
+{% endblock %}

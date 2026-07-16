@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}회원가입{% endblock %}
+{% block content %}
+    <div class="card-box mx-auto" style="max-width: 380px;">
+        <h1 class="h4 page-title mb-3 text-center">회원가입</h1>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field|add_class:'form-control' }}
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary w-100">가입하기</button>
+            <a class="btn btn-link w-100" href="{% url 'accounts:login' %}">로그인</a>
+        </form>
+    </div>
+{% endblock %}
