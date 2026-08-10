@@ -1,21 +1,10 @@
-{% extends 'base.html' %}
-{% load widget_tweaks %}
-{% block title %}{% if post %}게시글 수정{% else %}게시글 작성{% endif %}{% endblock %}
-{% block content %}
-    <h1 class="h4 page-title mb-3">{% if post %}게시글 수정{% else %}게시글 작성{% endif %}</h1>
-    <div class="card-box">
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label" for="{{ form.title.id_for_label }}">제목</label>
-                {{ form.title|add_class:'form-control' }}
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="{{ form.content.id_for_label }}">내용</label>
-                {{ form.content|add_class:'form-control'|attr:'rows:10' }}
-            </div>
-            <button type="submit" class="btn btn-primary">저장</button>
-            <a class="btn btn-secondary" href="{% url 'board:post_list' %}">취소</a>
-        </form>
-    </div>
-{% endblock %}
+{% extends 'base.html' %}{% load widget_tweaks %}
+{% block title %}{% if post %}기록 수정{% else %}새 커피 기록{% endif %}{% endblock %}
+{% block content %}<section class="mx-auto max-w-3xl px-4 py-12 sm:px-6"><div class="text-center"><p class="eyebrow">Write a coffee note</p><h1 class="mt-2 text-3xl font-bold text-coffee-900">{% if post %}커피 기록 수정하기{% else %}오늘의 커피를 들려주세요{% endif %}</h1><p class="mt-2 text-stone-500">원두, 장비, 추출 레시피와 특별한 맛의 순간을 공유해 보세요.</p></div><form method="post" enctype="multipart/form-data" class="card mt-8 space-y-6 p-6 sm:p-8">{% csrf_token %}
+<div><label class="mb-2 block text-sm font-semibold">카테고리</label>{{ form.category|add_class:'field' }}{% for error in form.category.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}</div>
+<div><label class="mb-2 block text-sm font-semibold">제목</label>{{ form.title|add_class:'field'|attr:'placeholder:어떤 커피 이야기인가요?' }}{% for error in form.title.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}</div>
+<div><label class="mb-2 block text-sm font-semibold">내용</label>{{ form.content|add_class:'field'|attr:'placeholder:원두, 분쇄도, 물 온도, 추출 시간과 느낀 향미를 적어보세요.' }}{% for error in form.content.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}</div>
+<div class="rounded-2xl bg-coffee-50 p-5"><div class="mb-4"><b class="text-sm text-coffee-900">레시피 상세 <span class="font-normal text-stone-400">선택 입력</span></b><p class="mt-1 text-xs text-stone-500">입력한 값은 게시글 상단에 보기 좋은 레시피 카드로 표시됩니다.</p></div><div class="grid gap-3 sm:grid-cols-2"><div><label class="mb-1 block text-xs font-semibold">원두량</label>{{ form.bean_amount|add_class:'field'|attr:'placeholder:예: 20g' }}</div><div><label class="mb-1 block text-xs font-semibold">물양</label>{{ form.water_amount|add_class:'field'|attr:'placeholder:예: 300g' }}</div><div><label class="mb-1 block text-xs font-semibold">물 온도</label>{{ form.water_temperature|add_class:'field'|attr:'placeholder:예: 92℃' }}</div><div><label class="mb-1 block text-xs font-semibold">추출 시간</label>{{ form.brew_time|add_class:'field'|attr:'placeholder:예: 2분 45초' }}</div><div class="sm:col-span-2"><label class="mb-1 block text-xs font-semibold">추출 도구</label>{{ form.brew_tool|add_class:'field'|attr:'placeholder:예: V60 02, 코만단테 24클릭' }}</div></div></div>
+<div><label class="mb-2 block text-sm font-semibold">사진 <span class="font-normal text-stone-400">최대 5장 · JPEG, PNG, WebP · 장당 5MB</span></label><label class="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-coffee-200 bg-coffee-50 px-5 py-8 text-center text-sm text-stone-500 hover:border-coffee-400"><span><b class="block text-3xl font-light text-coffee-500">＋</b>사진 추가<br><small>클릭하거나 파일을 끌어오세요</small></span><span class="hidden">{{ form.images }}</span></label><div id="image-preview" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4"></div>{% for error in form.images.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% if post.images.all %}<div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{% for item in post.images.all %}<label class="relative overflow-hidden rounded-xl border border-coffee-100"><img src="{{ item.image.url }}" class="h-28 w-full object-cover" alt="{{ item.alt_text }}"><span class="flex items-center gap-2 bg-white p-2 text-xs text-red-600"><input type="checkbox" name="delete_images" value="{{ item.pk }}"> 삭제</span></label>{% endfor %}</div>{% endif %}</div>
+<div><label class="mb-2 block text-sm font-semibold">태그</label>{{ form.tags|add_class:'field' }}<p class="mt-1 text-xs text-stone-400">쉼표로 구분해 입력하세요.</p></div>
+<div class="flex gap-3 border-t border-coffee-100 pt-6"><a class="btn-secondary flex-1" href="{% url 'board:post_list' %}">취소</a><button id="save-button" class="btn-primary flex-[2]" type="submit">기록 저장하기</button></div></form></section><script>const imageInput=document.getElementById('id_images');imageInput?.addEventListener('change',function(){const box=document.getElementById('image-preview');box.innerHTML='';[...this.files].slice(0,5).forEach(file=>{const img=document.createElement('img');img.className='h-32 w-full rounded-xl object-cover';img.src=URL.createObjectURL(file);box.appendChild(img)})});const categoryInput=document.getElementById('id_category'),saveButton=document.getElementById('save-button');function updateSaveLabel(){saveButton.textContent=categoryInput?.value==='recipe'?'레시피 저장하기':'커피 기록 저장하기'}categoryInput?.addEventListener('change',updateSaveLabel);updateSaveLabel();</script>{% endblock %}

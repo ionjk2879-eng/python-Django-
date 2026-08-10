@@ -1,68 +1,14 @@
-{% extends 'base.html' %}
-{% block title %}게시글 목록{% endblock %}
+{% extends 'base.html' %}{% load static %}{% block title %}커피 커뮤니티{% endblock %}
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h4 mb-0 page-title">게시글 목록</h1>
-        {% if user.is_authenticated %}
-            <a class="btn btn-primary" href="{% url 'board:post_create' %}">글쓰기</a>
-        {% endif %}
-    </div>
-
-    <div class="card-box">
-        <form method="get" class="row g-2 mb-4">
-            <div class="col-auto">
-                <select name="type" class="form-select">
-                    <option value="all" {% if search_type == 'all' %}selected{% endif %}>전체</option>
-                    <option value="title" {% if search_type == 'title' %}selected{% endif %}>제목</option>
-                    <option value="content" {% if search_type == 'content' %}selected{% endif %}>내용</option>
-                    <option value="author" {% if search_type == 'author' %}selected{% endif %}>작성자</option>
-                </select>
-            </div>
-            <div class="col-auto">
-                <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="검색어">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-outline-primary">검색</button>
-            </div>
-        </form>
-
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>제목</th>
-                    <th>작성자</th>
-                    <th>조회수</th>
-                    <th>작성일</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for post in post_list %}
-                    <tr>
-                        <td><a class="text-body fw-medium" href="{% url 'board:post_detail' post.pk %}">{{ post.title }}</a></td>
-                        <td class="text-muted">{{ post.author.username }}</td>
-                        <td class="text-muted">{{ post.view_count }}</td>
-                        <td class="text-muted">{{ post.created_at|date:'Y-m-d H:i' }}</td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">등록된 게시글이 없습니다.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    {% if is_paginated %}
-        <nav class="mt-3">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&type={{ search_type }}&q={{ query }}">이전</a></li>
-                {% endif %}
-                <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
-                {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&type={{ search_type }}&q={{ query }}">다음</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% endif %}
-{% endblock %}
+{% if is_home %}
+<section class="relative min-h-[410px] bg-coffee-900 bg-cover bg-center" style="background-image:linear-gradient(90deg,rgba(15,12,10,.94),rgba(15,12,10,.5) 52%,rgba(15,12,10,.08)),url('{% static 'img/coffee-hero.png' %}')"><div class="mx-auto flex min-h-[410px] max-w-[1320px] items-center px-6 sm:px-12"><div class="max-w-lg"><p class="mb-4 text-base text-coffee-100">취향을 내리는 사람들</p><h1 class="font-serif text-5xl leading-[1.12] text-white sm:text-7xl">Better coffee,<br>together.</h1><p class="mt-5 max-w-md leading-7 text-coffee-100">커피 로그는 커피를 사랑하는 사람들이 모여<br>더 나은 커피를 함께 탐구하고, 경험을 나누는 공간입니다.</p><a class="mt-7 inline-flex rounded-xl bg-leaf px-6 py-3 font-semibold text-white hover:bg-green-800" href="{% if user.is_authenticated %}{% url 'board:post_create' %}{% else %}{% url 'accounts:signup' %}{% endif %}">커뮤니티 참여하기　›</a></div></div></section>
+<section class="mx-auto max-w-[1420px] px-5 py-6 sm:px-10"><div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+<a href="{% url 'board:community' %}?category=beans" class="relative h-44 overflow-hidden rounded-2xl border border-coffee-100 bg-white p-6 transition hover:-translate-y-1 hover:shadow-soft"><div class="relative z-10 max-w-[55%]"><span class="grid h-9 w-9 place-items-center rounded-full bg-leaf text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17.8 3.7C21 6.9 19.4 13 15.2 17.2S5 23 1.8 19.8 2.2 10.6 6.4 6.4 14.6.5 17.8 3.7Z"/><path d="M18 3.5c-3 5-5 4-8 7s-3 5-7 8"/></svg></span><h2 class="mt-3 font-bold">원두 이야기</h2><p class="mt-2 text-xs leading-5 text-stone-500">다양한 원두의 특징과<br>추천, 구매 가이드를<br>확인해 보세요.</p></div><img src="{% static 'img/categories/beans.png' %}" class="absolute right-2 top-1/2 h-[86%] w-[48%] -translate-y-1/2 object-contain object-center" alt="커피 원두"></a>
+<a href="{% url 'board:community' %}?category=gear" class="relative h-44 overflow-hidden rounded-2xl border border-coffee-100 bg-white p-6 transition hover:-translate-y-1 hover:shadow-soft"><div class="relative z-10 max-w-[55%]"><span class="grid h-9 w-9 place-items-center rounded-full bg-leaf text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 4h8l-1 8a3 3 0 0 1-6 0L8 4Z"/><path d="M6 4h12M10 16v4m4-4v4M7 21h10"/></svg></span><h2 class="mt-3 font-bold">커피 장비</h2><p class="mt-2 text-xs leading-5 text-stone-500">다양한 커피 장비의 사용기와<br>리뷰로 나에게 맞는 장비를<br>찾아보세요.</p></div><img src="{% static 'img/categories/gear.png' %}" class="absolute right-2 top-1/2 h-[86%] w-[48%] -translate-y-1/2 object-contain object-center" alt="커피 그라인더"></a>
+<a href="{% url 'board:community' %}?category=recipe" class="relative h-44 overflow-hidden rounded-2xl border border-coffee-100 bg-white p-6 transition hover:-translate-y-1 hover:shadow-soft"><div class="relative z-10 max-w-[55%]"><span class="grid h-9 w-9 place-items-center rounded-full bg-leaf text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 6h12l-2 5H8L6 6Z"/><path d="M9 11v3l-3 5h12l-3-5v-3"/></svg></span><h2 class="mt-3 font-bold">추출 레시피</h2><p class="mt-2 text-xs leading-5 text-stone-500">실패 없는 추출을 위한<br>커뮤니티 레시피를<br>공유하고 배워보세요.</p></div><img src="{% static 'img/categories/recipe.png' %}" class="absolute right-2 top-1/2 h-[86%] w-[48%] -translate-y-1/2 object-contain object-center" alt="커피 서버"></a>
+<a href="{% url 'board:community' %}?category=tasting" class="relative h-44 overflow-hidden rounded-2xl border border-coffee-100 bg-white p-6 transition hover:-translate-y-1 hover:shadow-soft"><div class="relative z-10 max-w-[55%]"><span class="grid h-9 w-9 place-items-center rounded-full bg-leaf text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="6" y="3" width="12" height="18" rx="1"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></span><h2 class="mt-3 font-bold">시음 노트</h2><p class="mt-2 text-xs leading-5 text-stone-500">나만의 커피 시음 노트를<br>기록하고, 다른 사람들과<br>비교해 보세요.</p></div><img src="{% static 'img/categories/tasting.png' %}" class="absolute right-2 top-1/2 h-[86%] w-[48%] -translate-y-1/2 object-contain object-center" alt="시음 노트"></a>
+</div><div class="mb-4 mt-8 flex items-center justify-between"><h2 class="text-lg font-bold">새로 올라온 커피 이야기</h2><a class="text-xs text-stone-500" href="{% url 'board:community' %}?category=beans">더보기 ›</a></div>
+<div class="overflow-hidden rounded-2xl border border-coffee-100 bg-white">{% for post in post_list %}<a href="{% url 'board:post_detail' post.pk %}" class="grid grid-cols-[76px_1fr_auto] items-center gap-4 border-b border-coffee-100 px-4 py-3 last:border-0 hover:bg-coffee-50">{% with image=post.images.first %}{% if image %}<img src="{{ image.image.url }}" class="h-12 w-[76px] rounded-lg object-cover" alt="">{% else %}<div class="h-12 rounded-lg bg-coffee-100"></div>{% endif %}{% endwith %}<div class="min-w-0"><div class="flex items-center gap-2"><h3 class="truncate text-sm font-semibold">{{ post.title }}</h3><span class="hidden rounded bg-leaf px-2 py-0.5 text-[10px] text-white sm:inline">{{ post.get_category_display }}</span></div><p class="mt-1 text-xs text-stone-400">{{ post.author.username }}　·　{{ post.created_at|timesince }} 전</p></div><div class="hidden items-center gap-7 text-xs text-stone-400 sm:flex"><span>♡ {{ post.like_count }}</span><span>◯ {{ post.comment_count }}</span></div></a>{% endfor %}</div></section>
+{% else %}
+<section class="mx-auto max-w-[1320px] px-5 py-10 sm:px-10"><h1 class="text-4xl font-bold tracking-tight">커뮤니티</h1><p class="mt-2 text-stone-500">커피를 사랑하는 사람들의 이야기와 경험을 함께 나눠보세요.</p><form method="get" class="mt-6 flex gap-3 rounded-2xl bg-white p-4 shadow-soft"><div class="relative flex-1"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">⌕</span><input name="q" value="{{ query }}" class="field !py-4 !pl-11" placeholder="검색어를 입력하세요"></div><select name="category" class="field max-w-44"><option value="">전체</option>{% for value,label in categories %}<option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="btn-primary !px-10">검색</button></form><div class="mt-4 flex flex-wrap gap-2"><a href="{% url 'board:community' %}?q={{ query }}" class="rounded-full px-5 py-2 text-sm {% if not selected_category %}bg-coffee-800 text-white{% else %}border border-coffee-100 bg-white{% endif %}">전체</a>{% for value,label in categories %}<a href="{% url 'board:community' %}?category={{ value }}&q={{ query }}" class="rounded-full border border-coffee-100 bg-white px-5 py-2 text-sm {% if selected_category == value %}!bg-coffee-800 !text-white{% endif %}">{{ label }}</a>{% endfor %}</div><div class="mt-5 overflow-hidden rounded-2xl border border-coffee-100 bg-white shadow-soft"><div class="hidden grid-cols-[1fr_160px_110px_80px_80px] border-b border-coffee-100 px-6 py-3 text-xs text-stone-400 md:grid"><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>댓글</span></div>{% for post in post_list %}<a href="{% url 'board:post_detail' post.pk %}" class="grid items-center gap-4 border-b border-coffee-100 px-6 py-3 last:border-0 hover:bg-coffee-50 md:grid-cols-[1fr_160px_110px_80px_80px]">{% with image=post.images.first %}<div class="flex min-w-0 items-center gap-4">{% if image %}<img src="{{ image.image.url }}" class="h-14 w-24 rounded-lg object-cover" alt="">{% endif %}<div class="min-w-0"><h3 class="truncate font-semibold">{{ post.title }}</h3><p class="mt-1 truncate text-xs text-stone-400">{{ post.content|truncatechars:60 }}</p></div></div>{% endwith %}<div class="flex items-center gap-2 text-sm">{% if post.author.profile.avatar %}<img src="{{ post.author.profile.avatar.url }}" class="h-7 w-7 rounded-full object-cover" alt="">{% endif %}{{ post.author.username }}</div><span class="text-sm text-stone-400">{{ post.created_at|date:'Y.m.d' }}</span><span class="text-sm text-stone-400">{{ post.view_count }}</span><span class="text-sm text-stone-400">◯ {{ post.comment_count }}</span></a>{% empty %}<div class="p-16 text-center text-stone-400">검색 결과가 없습니다.</div>{% endfor %}</div></section>
+{% endif %}{% endblock %}
