@@ -57,37 +57,55 @@ Coffee Log는 원두, 커피 장비, 추출 레시피, 시음 노트와 카페 �
 
 브랜드 메시지와 카테고리 진입점을 먼저 제시하고 최근 커피 이야기를 이어서 탐색할 수 있도록 구성했습니다.
 
-![홈 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/01-home.png)
+![홈 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/01-home.jpg)
 
-### 검색 결과
+### 게시글 목록 (커뮤니티)
 
 검색어와 카테고리, 검색 범위를 조합해 필요한 콘텐츠를 빠르게 찾을 수 있습니다.
 
-![검색 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/02-search.png)
+![게시글 목록 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/02-community.jpg)
 
 ### 게시글 상세
 
-본문과 레시피 정보를 구조화해 보여주며 조회수, 좋아요, 북마크, 댓글을 한 화면에서 사용할 수 있습니다.
+본문과 레시피 정보를 구조화해 보여주며 조회수, 좋아요, 북마크, 댓글을 한 화면에서 사용할 수 있습니다. 좋아요·북마크가 활성화된 상태입니다.
 
-![게시글 상세 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/03-post-detail.png)
+![게시글 상세 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/03-post-detail.jpg)
 
 ### 게시글 작성
 
-카테고리와 기본 내용뿐 아니라 커피 추출에 특화된 정보를 함께 기록할 수 있습니다.
+카테고리를 "추출 레시피"로 선택하면 원두량·물양·물 온도·추출 시간·추출 도구 등 레시피 전용 입력 필드가 나타납니다.
 
-![게시글 작성 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/04-write.png)
+![게시글 작성 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/04-write.jpg)
 
 ### 마이페이지
 
 사용자 프로필과 활동 통계, 작성 글 및 저장한 게시글을 한곳에서 확인할 수 있습니다.
 
-![마이페이지](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/05-mypage.png)
+![마이페이지](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/05-mypage.jpg)
 
 ### 로그인
 
-서비스의 컬러와 타이포그래피를 유지하면서 입력 흐름에 집중한 인증 화면입니다.
+Google OAuth 소셜 로그인만 지원하는 인증 화면입니다.
 
-![로그인 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/06-login.png)
+![로그인 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/06-login.jpg)
+
+### REST API (DRF Browsable API)
+
+`/api/posts/`를 브라우저로 직접 열면 DRF의 브라우저블 API로 응답을 확인할 수 있습니다.
+
+![DRF API 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/07-api.jpg)
+
+### 댓글 인라인 수정
+
+수정 버튼을 누르면 페이지 이동 없이 그 자리에서 바로 댓글을 편집할 수 있습니다.
+
+![댓글 인라인 수정 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/08-comment-edit.jpg)
+
+### 프로필 편집
+
+아바타, 이메일, 소개, 활동 지역을 수정할 수 있고 이미지 선택 시 바로 미리보기가 표시됩니다.
+
+![프로필 편집 화면](https://raw.githubusercontent.com/ionjk2879-eng/python-Django-/main/portfolio/screenshots/09-profile-edit.jpg)
 
 ## 4. 기술 스택
 
