@@ -1,7 +1,12 @@
 asgiref==3.12.1
 Django==6.0.7
+django-allauth==65.19.1
 django-widget-tweaks==1.5.1
+djangorestframework==3.18.0
 psycopg2-binary==2.9.12
+PyJWT==2.13.0
+cryptography==50.0.1
 python-dotenv==1.2.3
+requests==2.34.2
 sqlparse==0.5.5
 tzdata==2026.3

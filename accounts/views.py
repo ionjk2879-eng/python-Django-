@@ -1,21 +1,10 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, UpdateView
+from django.views.generic import DetailView, UpdateView
 
-from .forms import ProfileForm, SignUpForm
+from .forms import ProfileForm
 from .models import Profile
-
-
-class SignUpView(CreateView):
-    form_class = SignUpForm
-    template_name = 'accounts/signup.html'
-    success_url = reverse_lazy('accounts:login')
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        Profile.objects.get_or_create(user=self.object)
-        return response
 
 
 class MyPageView(LoginRequiredMixin, DetailView):

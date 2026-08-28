@@ -28,12 +28,20 @@ Coffee Log는 원두, 커피 장비, 추출 레시피, 시음 노트와 카페 �
 
 ### 사용자와 상호작용
 
-- 회원가입, 로그인, 로그아웃 및 세션 인증
+- Google OAuth 소셜 로그인(django-allauth) 및 세션 인증
 - 작성자만 게시글과 댓글을 수정·삭제할 수 있는 권한 제어
 - 댓글 작성·수정·삭제와 Fetch API 기반 인라인 댓글 수정
 - 게시글 좋아요 및 북마크 토글
 - 마이페이지에서 프로필, 작성 글, 댓글 수, 북마크 현황 확인
-- 프로필 이미지, 소개, 활동 지역, 이메일 수정
+- 프로필 이미지, 소개, 활동 지역, 이메일 수정 (파일 선택 시 이미지 미리보기)
+
+### REST API (Django REST Framework)
+
+- `/api/posts/` — 목록 조회(제목·내용·작성자·태그 검색, 카테고리 필터), 상세 조회, 생성·수정·삭제
+- `/api/posts/{id}/recommendations/` — 같은 카테고리 내 좋아요순 추천
+- `/api/posts/{id}/like/`, `/api/posts/{id}/bookmark/` — 로그인 사용자 전용 토글 액션
+- `/api/comments/` — 댓글 생성·수정·삭제
+- 세션 인증 재사용으로 별도 토큰 체계 없이 기존 로그인과 통합, 작성자 본인만 쓰기 가능하도록 객체 단위 권한(`IsAuthorOrReadOnly`) 적용
 
 ### 공유와 사용자 경험
 
@@ -84,11 +92,12 @@ Coffee Log는 원두, 커피 장비, 추출 레시피, 시음 노트와 카페 �
 
 | 구분 | 기술 |
 |---|---|
-| Backend | Python 3.13, Django 6.0 |
-| Database | SQLite, Django ORM |
+| Backend | Python 3.13, Django 6.0, Django REST Framework |
+| Database | PostgreSQL 16 (Docker Compose), Django ORM |
 | Frontend | Django Templates, Tailwind CSS CDN, Vanilla JavaScript |
-| Authentication | Django Auth, Session |
+| Authentication | django-allauth (Google OAuth), Session |
 | Forms | Django Forms, django-widget-tweaks |
+| Infra | Docker Compose, python-dotenv (환경 변수 기반 비밀정보 관리) |
 | Version Control | Git, GitHub |
 
 ## 5. 시스템 구조
@@ -98,17 +107,18 @@ Browser
   │ HTTP request / form / Fetch API
   ▼
 Django URL Router
-  ├── accounts: 회원가입, 인증, 프로필, 마이페이지
-  └── board: 게시글, 이미지, 댓글, 좋아요, 북마크
+  ├── accounts: Google OAuth 인증(allauth), 프로필, 마이페이지
+  ├── board: 게시글, 이미지, 댓글, 좋아요, 북마크 (서버 렌더링)
+  └── api: DRF ViewSet 기반 게시글·댓글 REST API
        │
        ▼
-Class-Based Views + Forms
+Class-Based Views + Forms  /  DRF Serializers + Permissions
        │
        ▼
 Django ORM
        │
        ▼
-SQLite
+PostgreSQL (Docker)
 ```
 
 ### 데이터 관계
@@ -160,13 +170,15 @@ obj.refresh_from_db(fields=['view_count'])
 ## 7. 프로젝트 구조
 
 ```text
-accounts/                  인증, 프로필, 마이페이지
+accounts/                  Google OAuth 인증, 프로필, 마이페이지
 board/                     게시글, 이미지, 댓글, 반응 기능
+  api/                     DRF serializers, permissions, viewsets
   management/commands/     포트폴리오 데모 데이터 생성 명령
   static/img/              브랜드·카테고리·Open Graph 이미지
 config/                    Django 프로젝트 설정과 루트 URL
 templates/                 공통 레이아웃과 인증 템플릿
 portfolio/screenshots/     포트폴리오 화면 캡처
+docker-compose.yml         로컬 PostgreSQL 컨테이너
 manage.py
 requirements.txt
 ```
@@ -191,11 +203,14 @@ System check identified no issues (0 silenced).
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+# .env에 DB_NAME, DB_USER, DB_PASSWORD, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET 설정 후
+docker compose up -d          # PostgreSQL 컨테이너 기동
 python manage.py migrate
 python manage.py runserver
 ```
 
-브라우저에서 `http://127.0.0.1:8000/`으로 접속합니다.
+브라우저에서 `http://127.0.0.1:8000/`으로 접속합니다. Google 로그인을 쓰려면 Google Cloud Console에서 OAuth 클라이언트를 발급받아 `.env`에 등록하고, 승인된 리디렉션 URI에 `http://localhost:8000/accounts/google/login/callback/`을 추가해야 합니다.
 
 포트폴리오용 데모 데이터를 생성하려면 다음 명령을 실행합니다.
 
@@ -207,4 +222,6 @@ python manage.py seed_portfolio
 
 이 프로젝트를 통해 Django의 인증, ORM 관계 모델, 클래스 기반 뷰, 폼 검증과 서버 사이드 렌더링을 하나의 사용자 흐름으로 연결했습니다. 특히 기능 구현에 그치지 않고 쿼리 효율, 객체 단위 권한, 동시성, 업로드 정합성을 고려하면서 커뮤니티 서비스의 기본 구조를 설계했습니다.
 
-향후에는 PostgreSQL 전환, 환경 변수 기반 비밀정보 관리, 클라우드 이미지 스토리지, 알림 기능, 자동화 테스트 확대, CI/CD 및 운영 서버 배포를 적용해 프로덕션 수준으로 확장할 계획입니다.
+이후 SQLite에서 PostgreSQL(Docker Compose)로 전환하고, 비밀정보를 `.env`로 분리했습니다. 검색·추천·상세 조회 기능은 처음에 별도 FastAPI 서비스로 구현했다가, Django 세션 인증을 그대로 재사용할 수 있고 서버를 하나로 유지할 수 있다는 이유로 Django REST Framework로 통합하는 방향으로 재설계했습니다. 인증도 자체 회원가입 대신 Google OAuth(django-allauth)로 전환해 비밀번호 관리 부담을 없앴습니다. 이 과정에서 두 프레임워크의 트레이드오프(프로세스 분리 여부, 인증 재사용성, 운영 복잡도)를 직접 비교하고 프로젝트 규모에 맞는 선택을 하는 경험을 했습니다.
+
+향후에는 클라우드 이미지 스토리지, 알림 기능, 자동화 테스트 확대, CI/CD 및 운영 서버 배포를 적용해 프로덕션 수준으로 확장할 계획입니다.
