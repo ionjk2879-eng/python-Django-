@@ -30,7 +30,7 @@ Coffee Log는 원두, 커피 장비, 추출 레시피, 시음 노트와 카페 �
 
 - Google OAuth 소셜 로그인(django-allauth) 및 세션 인증
 - 작성자만 게시글과 댓글을 수정·삭제할 수 있는 권한 제어
-- 댓글 작성·수정·삭제와 Fetch API 기반 인라인 댓글 수정
+- 댓글 작성·수정·삭제를 페이지 이동 없이 그 자리에서 처리 (Fetch API로 DRF 댓글 API 호출)
 - 게시글 좋아요 및 북마크 토글
 - 마이페이지에서 프로필, 작성 글, 댓글 수, 북마크 현황 확인
 - 프로필 이미지, 소개, 활동 지역, 이메일 수정 (파일 선택 시 이미지 미리보기)
@@ -46,6 +46,7 @@ Coffee Log는 원두, 커피 장비, 추출 레시피, 시음 노트와 카페 �
 ### 공유와 사용자 경험
 
 - Tailwind CSS CDN 기반 반응형 UI
+- htmx 기반 사이트 전역 부분 페이지 전환(PJAX): 전체 새로고침 없이 링크·폼 탐색, View Transitions API로 자연스러운 전환 효과
 - Open Graph 및 Twitter Card 메타 태그
 - 카카오톡 공유 미리보기를 위한 1200×630 대표 이미지
 - JPEG, PNG, WebP 파일 형식과 파일당 5MB 제한 검증
@@ -94,7 +95,7 @@ Coffee Log는 원두, 커피 장비, 추출 레시피, 시음 노트와 카페 �
 |---|---|
 | Backend | Python 3.13, Django 6.0, Django REST Framework |
 | Database | PostgreSQL 16 (Docker Compose), Django ORM |
-| Frontend | Django Templates, Tailwind CSS CDN, Vanilla JavaScript |
+| Frontend | Django Templates, Tailwind CSS CDN, htmx, Vanilla JavaScript |
 | Authentication | django-allauth (Google OAuth), Session |
 | Forms | Django Forms, django-widget-tweaks |
 | Infra | Docker Compose, python-dotenv (환경 변수 기반 비밀정보 관리) |
@@ -163,9 +164,11 @@ obj.refresh_from_db(fields=['view_count'])
 
 `LoginRequiredMixin`과 `UserPassesTestMixin`을 조합해 인증 여부와 작성자 일치 여부를 뷰 계층에서 검사합니다. 화면에서 버튼을 감추는 수준이 아니라 서버에서 수정·삭제 권한을 강제합니다.
 
-### 점진적 비동기 처리
+### 점진적 비동기 처리와 PJAX 네비게이션
 
-전체 서비스를 SPA로 전환하지 않고 상호작용이 잦은 댓글 수정과 좋아요·북마크에만 JSON 응답을 적용했습니다. Django 템플릿의 단순한 구조를 유지하면서 필요한 부분의 사용자 경험을 개선했습니다.
+React 같은 SPA 프레임워크로 전면 전환하는 대신, 서버 렌더링(Django 템플릿) 구조는 그대로 두고 htmx의 `hx-boost`로 링크·폼 탐색을 가로채 페이지의 `<body>`만 교체하는 PJAX 방식을 전역에 적용했습니다. 브라우저 View Transitions API를 연결해 전환 시 짧은 크로스페이드 효과를 주고, 미지원 브라우저에서는 자동으로 일반 전환으로 폴백됩니다.
+
+댓글 작성·수정·삭제처럼 상호작용이 더 잦은 부분은 htmx 전역 처리와 별도로 자체 Fetch 코드를 작성해 DRF 댓글 API를 직접 호출하고 해당 댓글 DOM만 교체합니다. 이 둘을 같은 페이지에 함께 적용하면서 **htmx가 모든 폼을 자동으로 가로채 기존 Fetch 코드와 동시에 같은 댓글을 두 번 생성하는 버그**를 발견했고, 댓글 폼에 `hx-boost="false"`를 지정해 htmx 처리 대상에서 제외하는 방식으로 해결했습니다. 여러 비동기 처리 계층이 겹칠 때 이벤트 핸들러 간 충돌을 식별하고 범위를 명확히 분리하는 경험이었습니다.
 
 ## 7. 프로젝트 구조
 
@@ -223,5 +226,7 @@ python manage.py seed_portfolio
 이 프로젝트를 통해 Django의 인증, ORM 관계 모델, 클래스 기반 뷰, 폼 검증과 서버 사이드 렌더링을 하나의 사용자 흐름으로 연결했습니다. 특히 기능 구현에 그치지 않고 쿼리 효율, 객체 단위 권한, 동시성, 업로드 정합성을 고려하면서 커뮤니티 서비스의 기본 구조를 설계했습니다.
 
 이후 SQLite에서 PostgreSQL(Docker Compose)로 전환하고, 비밀정보를 `.env`로 분리했습니다. 검색·추천·상세 조회 기능은 처음에 별도 FastAPI 서비스로 구현했다가, Django 세션 인증을 그대로 재사용할 수 있고 서버를 하나로 유지할 수 있다는 이유로 Django REST Framework로 통합하는 방향으로 재설계했습니다. 인증도 자체 회원가입 대신 Google OAuth(django-allauth)로 전환해 비밀번호 관리 부담을 없앴습니다. 이 과정에서 두 프레임워크의 트레이드오프(프로세스 분리 여부, 인증 재사용성, 운영 복잡도)를 직접 비교하고 프로젝트 규모에 맞는 선택을 하는 경험을 했습니다.
+
+이어서 페이지 전환 시 화면이 매번 새로고침되는 문제를 htmx 기반 PJAX 방식으로 개선했습니다. React로 전면 SPA화하는 대신 기존 Django 템플릿 구조를 유지하면서 필요한 부분만 부분 교체하는 절충안을 택했고, 그 과정에서 기존 Fetch 기반 댓글 처리와 htmx의 자동 폼 처리가 충돌해 댓글이 중복 생성되는 버그를 겪고 원인을 추적해 수정했습니다.
 
 향후에는 클라우드 이미지 스토리지, 알림 기능, 자동화 테스트 확대, CI/CD 및 운영 서버 배포를 적용해 프로덕션 수준으로 확장할 계획입니다.

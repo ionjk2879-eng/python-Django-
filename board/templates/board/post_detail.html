@@ -1,3 +1,97 @@
 {% extends 'base.html' %}{% load widget_tweaks %}{% block title %}{{ post.title }}{% endblock %}
 {% block content %}<section class="mx-auto max-w-[1240px] px-5 py-7"><a class="text-sm font-semibold text-leaf" href="{% url 'board:community' %}">←　커뮤니티로 돌아가기</a><article class="mt-5 overflow-hidden rounded-2xl border border-coffee-100 bg-white shadow-soft"><div class="grid lg:grid-cols-2"><div class="flex flex-col justify-between p-7 sm:p-9"><div><div class="flex items-center gap-3">{% if post.author.profile.avatar %}<img src="{{ post.author.profile.avatar.url }}" class="h-12 w-12 rounded-full object-cover" alt="">{% endif %}<div><div class="flex items-center gap-2"><b>{{ post.author.username }}</b><span class="rounded-full bg-coffee-100 px-2 py-1 text-[10px] text-coffee-700">{{ post.get_category_display }}</span></div><p class="mt-1 text-xs text-stone-400">{{ post.created_at|date:'Y.m.d' }}　·　조회 {{ post.view_count }}</p></div></div><h1 class="mt-8 font-serif text-4xl leading-[1.18] text-coffee-900 sm:text-5xl">{{ post.title }}</h1>{% if post.has_recipe_details %}<div class="mt-7 flex flex-wrap gap-2">{% if post.bean_amount %}<span class="rounded-full border border-coffee-100 px-4 py-2 text-sm">◒　원두 {{ post.bean_amount }}</span>{% endif %}{% if post.water_amount %}<span class="rounded-full border border-coffee-100 px-4 py-2 text-sm">♢　물 {{ post.water_amount }}</span>{% endif %}{% if post.water_temperature %}<span class="rounded-full border border-coffee-100 px-4 py-2 text-sm">♨　{{ post.water_temperature }}</span>{% endif %}</div>{% endif %}</div><div class="mt-8 flex flex-wrap gap-2">{% for tag in post.tag_list %}<a href="{% url 'board:community' %}?q={{ tag }}" class="rounded-full bg-coffee-50 px-3 py-1 text-xs text-stone-500">#{{ tag }}</a>{% endfor %}</div></div>{% with image=post.images.first %}{% if image %}<img src="{{ image.image.url }}" class="min-h-[390px] h-full w-full object-cover" alt="{{ image.alt_text }}">{% endif %}{% endwith %}</div><div class="border-t border-coffee-100 p-7 sm:p-9"><div class="grid gap-8 lg:grid-cols-[280px_1fr]">{% if post.has_recipe_details %}<dl class="grid grid-cols-[90px_1fr] content-start gap-y-3 text-sm"><dt class="font-bold text-leaf">원두</dt><dd>{{ post.bean_amount|default:'-' }}</dd><dt class="font-bold text-leaf">추출 도구</dt><dd>{{ post.brew_tool|default:'-' }}</dd><dt class="font-bold text-leaf">물양</dt><dd>{{ post.water_amount|default:'-' }}</dd><dt class="font-bold text-leaf">물 온도</dt><dd>{{ post.water_temperature|default:'-' }}</dd><dt class="font-bold text-leaf">추출 시간</dt><dd>{{ post.brew_time|default:'-' }}</dd></dl>{% endif %}<div class="whitespace-pre-line leading-8 text-stone-700">{{ post.content }}</div></div><div class="mt-8 flex justify-between border-t border-coffee-100 pt-5"><div class="flex gap-2">{% if user.is_authenticated %}<form method="post" action="{% url 'board:post_like' post.pk %}">{% csrf_token %}<button class="{% if is_liked %}btn-primary{% else %}btn-secondary{% endif %}">♥ {{ post.liked_by.count }}</button></form><form method="post" action="{% url 'board:post_bookmark' post.pk %}">{% csrf_token %}<button class="{% if is_bookmarked %}btn-primary{% else %}btn-secondary{% endif %}">♡ 저장</button></form>{% endif %}</div>{% if user == post.author %}<div><a class="btn-secondary" href="{% url 'board:post_update' post.pk %}">수정</a> <a class="btn-danger" href="{% url 'board:post_delete' post.pk %}">삭제</a></div>{% endif %}</div></div></article>
-<section class="mt-0 rounded-b-2xl border border-t-0 border-coffee-100 bg-white p-7 shadow-soft"><h2 class="font-bold">함께 나눈 이야기 <span class="text-leaf">{{ comments|length }}</span></h2><div class="mt-3 divide-y divide-coffee-100">{% for comment in comments %}<div class="flex gap-3 py-4">{% if comment.author.profile.avatar %}<img src="{{ comment.author.profile.avatar.url }}" class="h-9 w-9 rounded-full object-cover" alt="">{% endif %}<div class="flex-1"><b class="text-sm">{{ comment.author.username }}</b><p class="mt-1 text-sm text-stone-600">{{ comment.content }}</p><small class="text-stone-400">{{ comment.created_at|date:'Y.m.d H:i' }}</small></div></div>{% endfor %}</div>{% if user.is_authenticated %}<form class="mt-4 flex gap-2" method="post" action="{% url 'board:comment_create' post.pk %}">{% csrf_token %}{{ comment_form.content|add_class:'field'|attr:'placeholder:댓글을 입력하세요.' }}<button class="btn-primary shrink-0">댓글 작성</button></form>{% endif %}</section></section>{% endblock %}
+<section class="mt-0 rounded-b-2xl border border-t-0 border-coffee-100 bg-white p-7 shadow-soft"><h2 class="font-bold">함께 나눈 이야기 <span id="comment-count" class="text-leaf">{{ comments|length }}</span></h2><div id="comment-list" class="mt-3 divide-y divide-coffee-100">{% for comment in comments %}<div class="flex gap-3 py-4" data-comment-id="{{ comment.pk }}">{% if comment.author.profile.avatar %}<img src="{{ comment.author.profile.avatar.url }}" class="h-9 w-9 rounded-full object-cover" alt="">{% endif %}<div class="flex-1"><div class="flex items-center justify-between"><b class="text-sm">{{ comment.author.username }}</b>{% if comment.author == user %}<div class="flex gap-2 text-xs text-stone-400"><button type="button" class="comment-edit-btn hover:text-leaf">수정</button><button type="button" class="comment-delete-btn hover:text-red-500">삭제</button></div>{% endif %}</div><p class="comment-content mt-1 text-sm text-stone-600">{{ comment.content }}</p><small class="comment-date text-stone-400">{{ comment.created_at|date:'Y.m.d H:i' }}</small></div></div>{% endfor %}</div>{% if user.is_authenticated %}<form id="comment-form" hx-boost="false" class="mt-4 flex gap-2" method="post" action="{% url 'board:comment_create' post.pk %}">{% csrf_token %}{{ comment_form.content|add_class:'field'|attr:'placeholder:댓글을 입력하세요.' }}<button class="btn-primary shrink-0">댓글 작성</button></form>{% endif %}</section></section>
+<script>
+(function(){
+    function getCookie(name){var m=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');return m?m.pop():''}
+    var csrftoken=getCookie('csrftoken');
+    var list=document.getElementById('comment-list'),count=document.getElementById('comment-count'),form=document.getElementById('comment-form');
+
+    function commentBlockHTML(){
+        return '<div class="flex-1"><div class="flex items-center justify-between"><b class="text-sm"></b><div class="flex gap-2 text-xs text-stone-400"><button type="button" class="comment-edit-btn hover:text-leaf">수정</button><button type="button" class="comment-delete-btn hover:text-red-500">삭제</button></div></div><p class="comment-content mt-1 text-sm text-stone-600"></p><small class="comment-date text-stone-400"></small></div>';
+    }
+
+    if(form){
+        form.addEventListener('submit',function(e){
+            var textarea=form.querySelector('textarea');
+            var content=textarea.value.trim();
+            if(!content)return;
+            e.preventDefault();
+            fetch('/api/comments/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrftoken},body:JSON.stringify({post:{{ post.pk }},content:content})})
+                .then(function(r){if(!r.ok)throw new Error('failed');return r.json()})
+                .then(function(c){
+                    var el=document.createElement('div');
+                    el.className='flex gap-3 py-4';
+                    el.dataset.commentId=c.id;
+                    el.innerHTML=commentBlockHTML();
+                    el.querySelector('b').textContent=c.author;
+                    el.querySelector('.comment-content').textContent=c.content;
+                    el.querySelector('.comment-date').textContent=new Date(c.created_at).toLocaleString('ko-KR');
+                    list.appendChild(el);
+                    count.textContent=parseInt(count.textContent,10)+1;
+                    textarea.value='';
+                })
+                .catch(function(){form.submit()});
+        });
+    }
+
+    list.addEventListener('click',function(e){
+        var item=e.target.closest('[data-comment-id]');
+        if(!item)return;
+        var id=item.dataset.commentId;
+
+        if(e.target.classList.contains('comment-delete-btn')){
+            if(!confirm('댓글을 삭제할까요?'))return;
+            fetch('/api/comments/'+id+'/',{method:'DELETE',headers:{'X-CSRFToken':csrftoken}})
+                .then(function(r){
+                    if(!r.ok)throw new Error('failed');
+                    item.remove();
+                    count.textContent=parseInt(count.textContent,10)-1;
+                })
+                .catch(function(){alert('삭제에 실패했습니다.')});
+            return;
+        }
+
+        if(e.target.classList.contains('comment-edit-btn')){
+            var contentEl=item.querySelector('.comment-content');
+            var original=contentEl.textContent;
+            var textarea=document.createElement('textarea');
+            textarea.className='field text-sm';
+            textarea.value=original;
+            textarea.dataset.original=original;
+            contentEl.replaceWith(textarea);
+            var actions=e.target.parentElement;
+            actions.innerHTML='<button type="button" class="comment-save-btn hover:text-leaf">저장</button><button type="button" class="comment-cancel-btn hover:text-stone-600">취소</button>';
+            textarea.focus();
+            return;
+        }
+
+        if(e.target.classList.contains('comment-cancel-btn')){
+            var textarea=item.querySelector('textarea');
+            var p=document.createElement('p');
+            p.className='comment-content mt-1 text-sm text-stone-600';
+            p.textContent=textarea.dataset.original;
+            textarea.replaceWith(p);
+            e.target.parentElement.innerHTML='<button type="button" class="comment-edit-btn hover:text-leaf">수정</button><button type="button" class="comment-delete-btn hover:text-red-500">삭제</button>';
+            return;
+        }
+
+        if(e.target.classList.contains('comment-save-btn')){
+            var textarea=item.querySelector('textarea');
+            var newContent=textarea.value.trim();
+            if(!newContent)return;
+            fetch('/api/comments/'+id+'/',{method:'PATCH',headers:{'Content-Type':'application/json','X-CSRFToken':csrftoken},body:JSON.stringify({content:newContent})})
+                .then(function(r){if(!r.ok)throw new Error('failed');return r.json()})
+                .then(function(c){
+                    var p=document.createElement('p');
+                    p.className='comment-content mt-1 text-sm text-stone-600';
+                    p.textContent=c.content;
+                    textarea.replaceWith(p);
+                    e.target.parentElement.innerHTML='<button type="button" class="comment-edit-btn hover:text-leaf">수정</button><button type="button" class="comment-delete-btn hover:text-red-500">삭제</button>';
+                })
+                .catch(function(){alert('수정에 실패했습니다.')});
+        }
+    });
+})();
+</script>
+{% endblock %}
